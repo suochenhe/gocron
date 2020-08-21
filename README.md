@@ -136,8 +136,8 @@ docker run --name gocron --link mysql:db -p 5920:5920 -d ouqg/gocron
 
 v1.6
 --------
-* 支持钉钉消息通知并制定AT的用户
-* 角色重构为游客、开发者、管理员，游客只有查看权限，开发者只有节点查看和任务管理权限
+* 支持钉钉消息通知并制定AT的用户  [搬运 mayouzi/gocron](https://github.com/mayouzi/gocron)
+* 角色重构、权限控制优化、task list页面缓存、滚动位置优化
 
 v1.5
 --------
