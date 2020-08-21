@@ -1,7 +1,7 @@
 <template>
 <el-container>
   <task-sidebar></task-sidebar>
-  <el-main>
+  <el-main ref="main">
     <el-form :inline="true" >
       <el-row>
         <el-form-item label="任务ID">
@@ -32,7 +32,7 @@
             <el-option
               v-for="item in hosts"
               :key="item.id"
-              :label="item.alias + ' - ' + item.name + ':' + item.port "
+              :label="item.alias"
               :value="item.id">
             </el-option>
           </el-select>
@@ -49,13 +49,13 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="search()">搜索</el-button>
+          <el-button type="primary" @click="search(null,1)">搜索</el-button>
         </el-form-item>
       </el-row>
     </el-form>
     <el-row type="flex" justify="end">
       <el-col :span="2">
-        <el-button type="primary" @click="toEdit(null)" v-if="this.$store.getters.user.isAdmin">新增</el-button>
+        <el-button type="primary" @click="toEdit(null)" v-if="this.$store.getters.user.isDeveloper">新增</el-button>
       </el-col>
       <el-col :span="2">
         <el-button type="info" @click="refresh">刷新</el-button>
@@ -99,7 +99,7 @@
             </el-form-item> <br>
             <el-form-item label="任务节点">
               <div v-for="item in scope.row.hosts" :key="item.host_id">
-                {{item.alias}} - {{item.name}}:{{item.port}} <br>
+                {{item.alias}}<br>
               </div>
             </el-form-item> <br>
             <el-form-item label="命令:" style="width: 100%">
@@ -140,7 +140,7 @@
         label="执行方式">
       </el-table-column>
       <el-table-column
-        label="状态" v-if="this.isAdmin">
+        label="状态" v-if="this.$store.getters.user.isDeveloper">
           <template slot-scope="scope">
             <el-switch
               v-if="scope.row.level === 1"
@@ -166,7 +166,7 @@
           </el-switch>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="220" v-if="this.isAdmin">
+      <el-table-column label="操作" width="220" v-if="this.$store.getters.user.isDeveloper">
         <template slot-scope="scope">
           <el-row>
             <el-button type="primary" @click="toEdit(scope.row)">编辑</el-button>
@@ -205,7 +205,6 @@ export default {
         host_id: '',
         status: ''
       },
-      isAdmin: this.$store.getters.user.isAdmin,
       protocolList: [
         {
           value: '1',
@@ -225,7 +224,8 @@ export default {
           value: '1',
           label: '停止'
         }
-      ]
+      ],
+      list_scrollTop: 0
     }
   },
   components: {taskSidebar},
@@ -234,8 +234,25 @@ export default {
     if (hostId) {
       this.searchParams.host_id = hostId
     }
-
+  },
+  mounted () {
+    console.log('mounted')
+  },
+  activated () {
+    console.log('activated')
     this.search()
+    this.$refs.main.$el.scrollTop = this.list_scrollTop
+    window.addEventListener('scroll', this.funScroll, true)
+  },
+  beforeDestroy () {
+    console.log('beforeDestroy')
+  },
+  destroyed () {
+    console.log('deactivated')
+  },
+  deactivated () {
+    console.log('deactivated')
+    window.removeEventListener('scroll', this.funScroll, true)
   },
   filters: {
     formatLevel (value) {
@@ -264,6 +281,12 @@ export default {
     }
   },
   methods: {
+    funScroll (res) {
+      let scrollTop = this.$refs.main.$el.scrollTop
+      // console.log(scrollTop)
+      // console.log(res)
+      this.list_scrollTop = scrollTop
+    },
     changeStatus (item) {
       if (item.status) {
         taskService.enable(item.id)
@@ -288,7 +311,10 @@ export default {
       this.searchParams.page_size = pageSize
       this.search()
     },
-    search (callback = null) {
+    search (callback = null, page = null) {
+      if (page) {
+        this.searchParams.page = page
+      }
       taskService.list(this.searchParams, (tasks, hosts) => {
         this.tasks = tasks.data
         this.taskTotal = tasks.total

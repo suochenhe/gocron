@@ -11,20 +11,20 @@ import (
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/gzip"
 	"github.com/go-macaron/toolbox"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/host"
-	"github.com/ouqiang/gocron/internal/routers/install"
-	"github.com/ouqiang/gocron/internal/routers/loginlog"
-	"github.com/ouqiang/gocron/internal/routers/manage"
-	"github.com/ouqiang/gocron/internal/routers/task"
-	"github.com/ouqiang/gocron/internal/routers/tasklog"
-	"github.com/ouqiang/gocron/internal/routers/user"
+	"github.com/suochenhe/gocron/internal/modules/app"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/utils"
+	"github.com/suochenhe/gocron/internal/routers/host"
+	"github.com/suochenhe/gocron/internal/routers/install"
+	"github.com/suochenhe/gocron/internal/routers/loginlog"
+	"github.com/suochenhe/gocron/internal/routers/manage"
+	"github.com/suochenhe/gocron/internal/routers/task"
+	"github.com/suochenhe/gocron/internal/routers/tasklog"
+	"github.com/suochenhe/gocron/internal/routers/user"
 	"github.com/rakyll/statik/fs"
 	"gopkg.in/macaron.v1"
 
-	_ "github.com/ouqiang/gocron/internal/statik"
+	_ "github.com/suochenhe/gocron/internal/statik"
 )
 
 const (
@@ -106,6 +106,12 @@ func Register(m *macaron.Macaron) {
 
 	// 管理
 	m.Group("/system", func() {
+		m.Group("/ding", func() {
+			m.Get("", manage.Ding)
+			m.Post("/update", manage.UpdateDing)
+			m.Post("/user", manage.CreateDingUser)
+			m.Post("/user/remove/:id", manage.RemoveDingUser)
+		})
 		m.Group("/slack", func() {
 			m.Get("", manage.Slack)
 			m.Post("/update", manage.UpdateSlack)
@@ -261,6 +267,21 @@ func urlAuth(ctx *macaron.Context) {
 	for _, path := range allowPaths {
 		if path == uri {
 			return
+		}
+	}
+
+	if user.IsDeveloper(ctx) {
+		developerAllowPrefix := []string{
+			"/task/",
+			"/system/ding",
+			"/system/mail",
+			"/system/slack",
+			"/host/ping/",
+		}
+		for _, prefix := range developerAllowPrefix {
+			if strings.HasPrefix(uri, prefix) {
+				return
+			}
 		}
 	}
 

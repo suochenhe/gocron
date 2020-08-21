@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/base"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/app"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/utils"
+	"github.com/suochenhe/gocron/internal/routers/base"
 	"gopkg.in/macaron.v1"
 )
 
-const tokenDuration = 4 * time.Hour
+//const tokenDuration = 4 * time.Hour
+const tokenDuration = 30 * 24 * time.Hour
 
 // UserForm 用户表单
 type UserForm struct {
@@ -23,7 +24,7 @@ type UserForm struct {
 	Password        string // 密码
 	ConfirmPassword string // 确认密码
 	Email           string `binding:"Required;MaxSize(50)"` // 邮箱
-	IsAdmin         int8   // 是否是管理员 1:管理员 0:普通用户
+	Role            int8   // 0:普通用户 1:管理员  2:开发者
 	Status          models.Status
 }
 
@@ -110,7 +111,7 @@ func Store(ctx *macaron.Context, form UserForm) string {
 	userModel.Name = form.Name
 	userModel.Email = form.Email
 	userModel.Password = form.Password
-	userModel.IsAdmin = form.IsAdmin
+	userModel.Role = form.Role
 	userModel.Status = form.Status
 
 	if form.Id == 0 {
@@ -123,7 +124,7 @@ func Store(ctx *macaron.Context, form UserForm) string {
 			"name":     form.Name,
 			"email":    form.Email,
 			"status":   form.Status,
-			"is_admin": form.IsAdmin,
+			"role": 	form.Role,
 		})
 		if err != nil {
 			return json.CommonFailure("修改失败", err)
@@ -250,7 +251,7 @@ func ValidateLogin(ctx *macaron.Context) string {
 		"token":    token,
 		"uid":      userModel.Id,
 		"username": userModel.Name,
-		"is_admin": userModel.IsAdmin,
+		"role": 	userModel.Role,
 	})
 }
 
@@ -287,11 +288,24 @@ func IsLogin(ctx *macaron.Context) bool {
 
 // IsAdmin 判断当前用户是否是管理员
 func IsAdmin(ctx *macaron.Context) bool {
-	isAdmin, ok := ctx.Data["is_admin"]
+	role, ok := ctx.Data["role"]
 	if !ok {
 		return false
 	}
-	if v, ok := isAdmin.(int); ok {
+	if v, ok := role.(int); ok {
+		return v == 1
+	} else {
+		return false
+	}
+}
+
+// IsDeveloper 判断当前用户是否是开发者
+func IsDeveloper(ctx *macaron.Context) bool {
+	role, ok := ctx.Data["role"]
+	if !ok {
+		return false
+	}
+	if v, ok := role.(int); ok {
 		return v > 0
 	} else {
 		return false
@@ -307,7 +321,7 @@ func generateToken(user *models.User) (string, error) {
 	claims["iat"] = time.Now().Unix()
 	claims["issuer"] = "gocron"
 	claims["username"] = user.Name
-	claims["is_admin"] = user.IsAdmin
+	claims["role"] = user.Role
 	token.Claims = claims
 
 	return token.SignedString([]byte(app.Setting.AuthSecret))
@@ -332,7 +346,7 @@ func RestoreToken(ctx *macaron.Context) error {
 	}
 	ctx.Data["uid"] = int(claims["uid"].(float64))
 	ctx.Data["username"] = claims["username"]
-	ctx.Data["is_admin"] = int(claims["is_admin"].(float64))
+	ctx.Data["role"] = int(claims["role"].(float64))
 
 	return nil
 }

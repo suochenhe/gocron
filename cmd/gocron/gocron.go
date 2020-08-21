@@ -10,18 +10,18 @@ import (
 
 	macaron "gopkg.in/macaron.v1"
 
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/setting"
-	"github.com/ouqiang/gocron/internal/routers"
-	"github.com/ouqiang/gocron/internal/service"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/app"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/setting"
+	"github.com/suochenhe/gocron/internal/routers"
+	"github.com/suochenhe/gocron/internal/service"
 	"github.com/ouqiang/goutil"
 	"github.com/urfave/cli"
 )
 
 var (
-	AppVersion           = "1.5"
+	AppVersion           = "1.6"
 	BuildDate, GitCommit string
 )
 

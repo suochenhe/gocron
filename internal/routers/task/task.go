@@ -3,16 +3,16 @@ package task
 import (
 	"strconv"
 	"strings"
-
+	gjson "encoding/json"
 	"github.com/ouqiang/goutil"
 
 	"github.com/go-macaron/binding"
 	"github.com/jakecoffman/cron"
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/base"
-	"github.com/ouqiang/gocron/internal/service"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/utils"
+	"github.com/suochenhe/gocron/internal/routers/base"
+	"github.com/suochenhe/gocron/internal/service"
 	"gopkg.in/macaron.v1"
 )
 
@@ -34,7 +34,7 @@ type TaskForm struct {
 	Tag              string
 	Remark           string
 	NotifyStatus     int8 `binding:"In(1,2,3,4)"`
-	NotifyType       int8 `binding:"In(1,2,3,4)"`
+	NotifyType       int8 `binding:"In(1,2,3,4,5)"`
 	NotifyReceiverId string
 	NotifyKeyword    string
 }
@@ -168,11 +168,12 @@ func Store(ctx *macaron.Context, form TaskForm) string {
 			return json.CommonFailure("不允许设置当前任务为子任务")
 		}
 	}
-
+	var isAdd = false
 	if id == 0 {
 		// 任务添加后开始调度执行
 		taskModel.Status = models.Running
 		id, err = taskModel.Create()
+		isAdd = true
 	} else {
 		_, err = taskModel.UpdateBean(id)
 	}
@@ -198,6 +199,29 @@ func Store(ctx *macaron.Context, form TaskForm) string {
 		addTaskToTimer(id)
 	}
 
+	out, _ := gjson.Marshal(form)
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.TaskModule)
+	if isAdd {
+		logModel.Title = "新增任务"
+	} else {
+		logModel.Title = "修改任务"
+	}
+
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+	
+	logger.Infof("user: %s store task: %d, form: %s", ctx.Data["username"], id, string(out))
+
 	return json.Success("保存成功", nil)
 }
 
@@ -206,6 +230,12 @@ func Remove(ctx *macaron.Context) string {
 	id := ctx.ParamsInt(":id")
 	json := utils.JsonResponse{}
 	taskModel := new(models.Task)
+	task, dErr := taskModel.Detail(id)
+	if dErr != nil || task.Id <= 0 {
+		return json.CommonFailure("获取任务详情失败", dErr)
+	}
+	var taskName = task.Name
+
 	_, err := taskModel.Delete(id)
 	if err != nil {
 		return json.CommonFailure(utils.FailureContent, err)
@@ -215,6 +245,24 @@ func Remove(ctx *macaron.Context) string {
 	taskHostModel.Remove(id)
 
 	service.ServiceTask.Remove(id)
+
+	out, _ := gjson.Marshal(map[string]interface{}{"id": id, "name": taskName})
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.TaskModule)
+	logModel.Title = "删除任务"
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+
+	logger.Infof("user: %s remove task: %d ", ctx.Data["username"], id)
 
 	return json.Success(utils.SuccessContent, nil)
 }
@@ -242,6 +290,24 @@ func Run(ctx *macaron.Context) string {
 	task.Spec = "手动运行"
 	service.ServiceTask.Run(task)
 
+	out, _ := gjson.Marshal(map[string]interface{}{"id": id, "name": task.Name})
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.TaskModule)
+	logModel.Title = "执行任务"
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+
+	logger.Infof("user: %s run task: %d", ctx.Data["username"], id)
+
 	return json.Success("任务已开始运行, 请到任务日志中查看结果", nil)
 }
 
@@ -250,18 +316,44 @@ func changeStatus(ctx *macaron.Context, status models.Status) string {
 	id := ctx.ParamsInt(":id")
 	json := utils.JsonResponse{}
 	taskModel := new(models.Task)
+	task, dErr := taskModel.Detail(id)
+	if dErr != nil || task.Id <= 0 {
+		return json.CommonFailure("获取任务详情失败", dErr)
+	}
+	var taskName = task.Name
+
 	_, err := taskModel.Update(id, models.CommonMap{
 		"status": status,
 	})
 	if err != nil {
 		return json.CommonFailure(utils.FailureContent, err)
 	}
-
+	var logTile = ""
 	if status == models.Enabled {
 		addTaskToTimer(id)
+		logTile = "启动任务"
 	} else {
 		service.ServiceTask.Remove(id)
+		logTile = "暂停任务"
 	}
+
+	out, _ := gjson.Marshal(map[string]interface{}{"id": id, "name": taskName})
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.TaskModule)
+	logModel.Title = logTile
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+
+	logger.Infof("user: %s change task: %d status: %d", ctx.Data["username"], id, status)
 
 	return json.Success(utils.SuccessContent, nil)
 }

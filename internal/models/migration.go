@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-xorm/xorm"
-	"github.com/ouqiang/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/logger"
 )
 
 type Migration struct{}
@@ -16,7 +16,7 @@ func (migration *Migration) Install(dbName string) error {
 	setting := new(Setting)
 	task := new(Task)
 	tables := []interface{}{
-		&User{}, task, &TaskLog{}, &Host{}, setting, &LoginLog{}, &TaskHost{},
+		&User{}, task, &TaskLog{}, &Host{}, setting, &LoginLog{}, &TaskHost{}, &OpLog{},
 	}
 	for _, table := range tables {
 		exist, err := Db.IsTableExist(table)
@@ -184,7 +184,7 @@ func (migration *Migration) upgradeFor140(session *xorm.Session) error {
 }
 
 func (m *Migration) upgradeFor150(session *xorm.Session) error {
-	logger.Info("开始升级到v1.5")
+	logger.Info("开始升级到v1.6")
 
 	tableName := TablePrefix + "task"
 	// task表增加字段 notify_keyword
@@ -197,6 +197,22 @@ func (m *Migration) upgradeFor150(session *xorm.Session) error {
 	}
 
 	settingModel := new(Setting)
+	settingModel.Code = DingCode
+	settingModel.Key = DingTemplateKey
+	settingModel.Value = dingTemplate
+	_, err = Db.Insert(settingModel)
+	if err != nil {
+		return err
+	}
+	settingModel.Id = 0
+	settingModel.Code = DingCode
+	settingModel.Key = DingUrlKey
+	settingModel.Value = ""
+	_, err = Db.Insert(settingModel)
+	if err != nil {
+		return err
+	}
+	settingModel.Id = 0
 	settingModel.Code = MailCode
 	settingModel.Key = MailTemplateKey
 	settingModel.Value = emailTemplate
@@ -231,7 +247,7 @@ func (m *Migration) upgradeFor150(session *xorm.Session) error {
 		return err
 	}
 
-	logger.Info("已升级到v1.5\n")
+	logger.Info("已升级到v1.6\n")
 
 	return nil
 }

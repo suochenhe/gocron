@@ -6,7 +6,15 @@
     </el-header>
     <el-main >
       <div id="main-container" v-cloak>
-        <router-view/>
+        <!--        <router-view/>-->
+        <keep-alive>
+          <router-view v-if="$route.meta.keepAlive">
+            <!-- 这里是会被缓存的视图组件，比如 Home！ -->
+          </router-view>
+        </keep-alive>
+
+        <router-view v-if="!$route.meta.keepAlive"></router-view>
+        <!-- 这里是不被缓存的视图组件，比如 Edit！ -->
       </div>
     </el-main>
     <el-footer>
@@ -61,7 +69,7 @@ export default {
     margin:0;
   }
   #main-container .el-main {
-    height: calc(100vh - 116px);
+    height: calc(100vh - 140px);
     margin:20px 20px 0 20px;
   }
   .el-aside .el-menu {

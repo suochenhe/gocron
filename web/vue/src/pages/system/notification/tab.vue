@@ -1,6 +1,7 @@
 <template>
   <div>
     <el-tabs v-model="activeName" @tab-click="changeTab">
+      <el-tab-pane label="钉钉" name="ding"></el-tab-pane>
       <el-tab-pane label="邮件" name="email"></el-tab-pane>
       <el-tab-pane label="Slack" name="slack"></el-tab-pane>
       <el-tab-pane label="Webhook" name="webhook"></el-tab-pane>
@@ -27,7 +28,7 @@ export default {
   created () {
     const segments = this.$route.path.split('/')
     if (segments.length !== 4) {
-      return 'email'
+      return 'ding'
     }
     this.activeName = segments[3]
   },

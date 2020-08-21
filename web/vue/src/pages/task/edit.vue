@@ -102,7 +102,7 @@
                 <el-option
                   v-for="item in hosts"
                   :key="item.id"
-                  :label="item.alias + ' - ' + item.name"
+                  :label="item.alias"
                   :value="item.id">
                 </el-option>
               </el-select>
@@ -196,6 +196,19 @@
             </el-form-item>
           </el-col>
           <el-col :span="8"
+                  v-if="form.notify_status !== 1 && form.notify_type === 5">
+            <el-form-item label="通知用户">
+              <el-select key="notify-ding" v-model="selectedDingNotifyId" placeholder="请选择">
+                <el-option
+                  v-for="item in dingUsers"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8"
                   v-if="form.notify_status !== 1 && form.notify_type === 2">
             <el-form-item label="接收用户">
               <el-select key="notify-mail" v-model="selectedMailNotifyIds" filterable multiple placeholder="请选择">
@@ -277,7 +290,7 @@ export default {
         timeout: 0,
         multi: 2,
         notify_status: 1,
-        notify_type: 2,
+        notify_type: 5,
         notify_receiver_id: '',
         notify_keyword: '',
         retry_times: 0,
@@ -377,6 +390,10 @@ export default {
       ],
       notifyTypes: [
         {
+          value: 5,
+          label: '钉钉'
+        },
+        {
           value: 2,
           label: '邮件'
         },
@@ -390,9 +407,14 @@ export default {
         }
       ],
       hosts: [],
+      dingUsers: [
+        {'id': '-', 'name': '无'},
+        {'id': 'all', 'name': '所有人'}
+      ],
       mailUsers: [],
       slackChannels: [],
       selectedHosts: [],
+      selectedDingNotifyId: '',
       selectedMailNotifyIds: [],
       selectedSlackNotifyIds: []
     }
@@ -462,7 +484,19 @@ export default {
           notifyReceiverIds.forEach((v) => {
             this.selectedSlackNotifyIds.push(parseInt(v))
           })
+        } else if (this.form.notify_type === 5) {
+          notifyReceiverIds.forEach((v) => {
+            this.selectedDingNotifyId = v
+          })
         }
+      }
+    })
+
+    notificationService.ding((data) => {
+      for (let i = 0; i < data.users.length; i++) {
+        let item = data.users[i]
+        item['id'] = item['id'].toString()
+        this.dingUsers.push(item)
       }
     })
 
@@ -478,6 +512,7 @@ export default {
     submit () {
       this.$refs['form'].validate((valid) => {
         if (!valid) {
+          console.log(valid)
           return false
         }
         if (this.form.protocol === 2 && this.selectedHosts.length === 0) {
@@ -485,6 +520,10 @@ export default {
           return false
         }
         if (this.form.notify_status > 1) {
+          if (this.form.notify_type === 5 && this.selectedDingNotifyId === '') {
+            this.$message.error('请选择钉钉接收用户')
+            return false
+          }
           if (this.form.notify_type === 2 && this.selectedMailNotifyIds.length === 0) {
             this.$message.error('请选择邮件接收用户')
             return false
@@ -507,6 +546,9 @@ export default {
       }
       if (this.form.notify_status > 1 && this.form.notify_type === 3) {
         this.form.notify_receiver_id = this.selectedSlackNotifyIds.join(',')
+      }
+      if (this.form.notify_status > 1 && this.form.notify_type === 5) {
+        this.form.notify_receiver_id = this.selectedDingNotifyId.toString()
       }
       taskService.update(this.form, () => {
         this.$router.push('/task')

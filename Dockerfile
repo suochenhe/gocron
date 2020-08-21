@@ -1,6 +1,6 @@
 FROM golang:1.10-alpine as builder
 
-WORKDIR /go/src/github.com/ouqiang/gocron
+WORKDIR /go/src/github.com/suochenhe/gocron
 
 COPY . .
 

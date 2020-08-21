@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/ouqiang/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/logger"
 )
 
 type Message map[string]interface{}
@@ -53,6 +53,10 @@ func run() {
 			// WebHook
 			webHook := WebHook{}
 			go webHook.Send(msg)
+		case 4:
+			// Ding
+			ding := Ding{}
+			go ding.Send(msg)
 		}
 		time.Sleep(1 * time.Second)
 	}

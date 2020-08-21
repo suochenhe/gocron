@@ -3,12 +3,65 @@ package manage
 import (
 	"encoding/json"
 
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/utils"
 	"gopkg.in/macaron.v1"
 )
 
+// region 钉钉
+func Ding(ctx *macaron.Context) string {
+	settingModel := new(models.Setting)
+	ding, err := settingModel.Ding()
+	jsonResp := utils.JsonResponse{}
+	if err != nil {
+		logger.Error(err)
+		return jsonResp.Success(utils.SuccessContent, nil)
+
+	}
+
+	return jsonResp.Success(utils.SuccessContent, ding)
+}
+
+func UpdateDing(ctx *macaron.Context) string {
+	url := ctx.QueryTrim("url")
+	template := ctx.QueryTrim("template")
+	settingModel := new(models.Setting)
+	err := settingModel.UpdateDing(url, template)
+
+	return utils.JsonResponseByErr(err)
+}
+
+func CreateDingUser(ctx *macaron.Context) string {
+	name := ctx.QueryTrim("name")
+	mobile := ctx.QueryTrim("mobile")
+	settingModel := new(models.Setting)
+	if settingModel.IsUserNameExist(name) {
+		jsonResp := utils.JsonResponse{}
+
+		return jsonResp.CommonFailure("用户名已存在")
+	}
+	if settingModel.IsUserMobileExist(mobile) {
+		jsonResp := utils.JsonResponse{}
+
+		return jsonResp.CommonFailure("手机号已存在")
+	}
+	_, err := settingModel.CreateDingUser(name, mobile)
+
+	return utils.JsonResponseByErr(err)
+}
+
+func RemoveDingUser(ctx *macaron.Context) string {
+	id := ctx.ParamsInt(":id")
+	settingModel := new(models.Setting)
+	_, err := settingModel.RemoveDingUser(id)
+
+	return utils.JsonResponseByErr(err)
+}
+
+// endregion
+
+// region Slack
 func Slack(ctx *macaron.Context) string {
 	settingModel := new(models.Setting)
 	slack, err := settingModel.Slack()

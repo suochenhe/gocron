@@ -16,6 +16,7 @@ import UserLogin from '../pages/user/login'
 import UserEditPassword from '../pages/user/editPassword'
 import UserEditMyPassword from '../pages/user/editMyPassword'
 
+import NotificationDing from '../pages/system/notification/ding'
 import NotificationEmail from '../pages/system/notification/email'
 import NotificationSlack from '../pages/system/notification/slack'
 import NotificationWebhook from '../pages/system/notification/webhook'
@@ -24,15 +25,14 @@ import Install from '../pages/install/index'
 import LoginLog from '../pages/system/loginLog'
 
 Vue.use(Router)
-
+// authRoles -1未登录 0游客 1管理员 2开发者
 const router = new Router({
   routes: [
     {
       path: '*',
       component: NotFound,
       meta: {
-        noLogin: true,
-        noNeedAdmin: true
+        authRoles: [-1]
       }
     },
     {
@@ -44,8 +44,8 @@ const router = new Router({
       name: 'install',
       component: Install,
       meta: {
-        noLogin: true,
-        noNeedAdmin: true
+        // -1 未登录
+        authRoles: [-1]
       }
     },
     {
@@ -53,25 +53,32 @@ const router = new Router({
       name: 'task-list',
       component: TaskList,
       meta: {
-        noNeedAdmin: true
+        authRoles: [0, 1, 2],
+        keepAlive: true
       }
     },
     {
       path: '/task/create',
       name: 'task-create',
-      component: TaskEdit
+      component: TaskEdit,
+      meta: {
+        authRoles: [1, 2]
+      }
     },
     {
       path: '/task/edit/:id',
       name: 'task-edit',
-      component: TaskEdit
+      component: TaskEdit,
+      meta: {
+        authRoles: [1, 2]
+      }
     },
     {
       path: '/task/log',
       name: 'task-log',
       component: TaskLog,
       meta: {
-        noNeedAdmin: true
+        authRoles: [0, 1, 2]
       }
     },
     {
@@ -79,93 +86,121 @@ const router = new Router({
       name: 'host-list',
       component: HostList,
       meta: {
-        noNeedAdmin: true
+        authRoles: [0, 1, 2]
       }
     },
     {
       path: '/host/create',
       name: 'host-create',
-      component: HostEdit
+      component: HostEdit,
+      meta: {
+      }
     },
     {
       path: '/host/edit/:id',
       name: 'host-edit',
-      component: HostEdit
+      component: HostEdit,
+      meta: {
+      }
     },
     {
       path: '/user',
       name: 'user-list',
-      component: UserList
+      component: UserList,
+      meta: {
+      }
     },
     {
       path: '/user/create',
       name: 'user-create',
-      component: UserEdit
+      component: UserEdit,
+      meta: {
+      }
     },
     {
       path: '/user/edit/:id',
       name: 'user-edit',
-      component: UserEdit
+      component: UserEdit,
+      meta: {
+      }
     },
     {
       path: '/user/login',
       name: 'user-login',
       component: UserLogin,
       meta: {
-        noLogin: true
+        authRoles: [-1]
       }
     },
     {
       path: '/user/edit-password/:id',
       name: 'user-edit-password',
-      component: UserEditPassword
+      component: UserEditPassword,
+      meta: {
+      }
     },
     {
       path: '/user/edit-my-password',
       name: 'user-edit-my-password',
       component: UserEditMyPassword,
       meta: {
-        noNeedAdmin: true
+        authRoles: [0, 1, 2]
       }
     },
     {
       path: '/system',
-      redirect: '/system/notification/email'
+      redirect: '/system/notification/ding',
+      meta: {}
+    },
+    {
+      path: '/system/notification/ding',
+      name: 'system-notification-ding',
+      component: NotificationDing,
+      meta: {}
     },
     {
       path: '/system/notification/email',
       name: 'system-notification-email',
-      component: NotificationEmail
+      component: NotificationEmail,
+      meta: {}
     },
     {
       path: '/system/notification/slack',
       name: 'system-notification-slack',
-      component: NotificationSlack
+      component: NotificationSlack,
+      meta: {}
     },
     {
       path: '/system/notification/webhook',
       name: 'system-notification-webhook',
-      component: NotificationWebhook
+      component: NotificationWebhook,
+      meta: {}
     },
     {
       path: '/system/login-log',
       name: 'login-log',
-      component: LoginLog
+      component: LoginLog,
+      meta: {}
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.noLogin) {
+  let authRoles = to.meta.authRoles || []
+  console.log(to.name + ' path:' + to.path + ' ' + authRoles)
+  console.log('role:' + store.getters.user.role)
+  if (authRoles.includes(-1)) {
     next()
     return
   }
+
   if (store.getters.user.token) {
-    if ((store.getters.user.isAdmin || to.meta.noNeedAdmin)) {
+    let hasAuth = authRoles.includes(store.getters.user.role)
+    if (store.getters.user.isAdmin || hasAuth) {
       next()
       return
     }
-    if (!store.getters.user.isAdmin) {
+    if (!hasAuth) {
       next(
         {
           path: '/404.html'

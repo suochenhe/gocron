@@ -66,7 +66,7 @@ export default {
           token: data.token,
           uid: data.uid,
           username: data.username,
-          isAdmin: data.is_admin
+          role: data.role
         })
         this.$router.push(this.$route.query.redirect || '/')
       })
