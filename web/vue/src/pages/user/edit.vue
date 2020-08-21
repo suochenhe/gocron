@@ -19,9 +19,10 @@
             <el-input v-model="form.confirm_password" type="password"></el-input>
           </el-form-item>
         </template>
-        <el-form-item label="角色" prop="is_admin">
-          <el-radio-group v-model="form.is_admin">
-            <el-radio :label="0">普通用户</el-radio>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="form.role">
+            <el-radio :label="0">游客</el-radio>
+            <el-radio :label="2">开发者</el-radio>
             <el-radio :label="1">管理员</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -50,7 +51,7 @@ export default {
         id: '',
         name: '',
         email: '',
-        is_admin: 0,
+        role: 0,
         password: '',
         confirm_password: '',
         status: 1
@@ -84,7 +85,7 @@ export default {
       this.form.id = data.id
       this.form.name = data.name
       this.form.email = data.email
-      this.form.is_admin = data.is_admin
+      this.form.role = data.role
       this.form.status = data.status
     })
   },

@@ -11,13 +11,13 @@ import (
 	"github.com/ouqiang/goutil"
 
 	"github.com/jakecoffman/cron"
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/app"
-	"github.com/ouqiang/gocron/internal/modules/httpclient"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/notify"
-	rpcClient "github.com/ouqiang/gocron/internal/modules/rpc/client"
-	pb "github.com/ouqiang/gocron/internal/modules/rpc/proto"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/app"
+	"github.com/suochenhe/gocron/internal/modules/httpclient"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/notify"
+	rpcClient "github.com/suochenhe/gocron/internal/modules/rpc/client"
+	pb "github.com/suochenhe/gocron/internal/modules/rpc/proto"
 )
 
 var (
@@ -164,6 +164,7 @@ func (task Task) Add(taskModel models.Task) {
 	err := goutil.PanicToError(func() {
 		serviceCron.AddFunc(taskModel.Spec, taskFunc, cronName)
 	})
+
 	if err != nil {
 		logger.Error("添加任务到调度器失败#", err)
 	}
@@ -341,6 +342,7 @@ func createJob(taskModel models.Task) cron.FuncJob {
 		logger.Infof("开始执行任务#%s#命令-%s", taskModel.Name, taskModel.Command)
 		taskResult := execJob(handler, taskModel, taskLogId)
 		logger.Infof("任务完成#%s#命令-%s", taskModel.Name, taskModel.Command)
+
 		afterExecJob(taskModel, taskResult, taskLogId)
 	}
 

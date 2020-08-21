@@ -3,11 +3,12 @@ package tasklog
 // 任务日志
 
 import (
-	"github.com/ouqiang/gocron/internal/models"
-	"github.com/ouqiang/gocron/internal/modules/logger"
-	"github.com/ouqiang/gocron/internal/modules/utils"
-	"github.com/ouqiang/gocron/internal/routers/base"
-	"github.com/ouqiang/gocron/internal/service"
+	gjson "encoding/json"
+	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/logger"
+	"github.com/suochenhe/gocron/internal/modules/utils"
+	"github.com/suochenhe/gocron/internal/routers/base"
+	"github.com/suochenhe/gocron/internal/service"
 	"gopkg.in/macaron.v1"
 )
 
@@ -39,6 +40,24 @@ func Clear(ctx *macaron.Context) string {
 		return json.CommonFailure(utils.FailureContent)
 	}
 
+	out, _ := gjson.Marshal(map[string]interface{}{"event": "清空任务执行日志"})
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.LogModule)
+	logModel.Title = "清空日志"
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+
+	logger.Infof("user: %s clear log", ctx.Data["username"])
+
 	return json.Success(utils.SuccessContent, nil)
 }
 
@@ -52,6 +71,8 @@ func Stop(ctx *macaron.Context) string {
 	if err != nil {
 		return json.CommonFailure("获取任务信息失败#"+err.Error(), err)
 	}
+	var taskName = task.Name
+
 	if task.Protocol != models.TaskRPC {
 		return json.CommonFailure("仅支持SHELL任务手动停止")
 	}
@@ -62,6 +83,24 @@ func Stop(ctx *macaron.Context) string {
 		service.ServiceTask.Stop(host.Name, host.Port, id)
 
 	}
+
+	out, _ := gjson.Marshal(map[string]interface{}{"logId": id, "id": taskId, "name": taskName})
+
+	logModel := models.OpLog{}
+	logModel.Module = string(models.TaskModule)
+	logModel.Title = "停止任务"
+	logModel.Content = string(out)
+	logModel.UserId = ctx.Data["uid"].(int)
+	logModel.UserName = ctx.Data["username"].(string)
+	logId, logErr := logModel.Create()
+
+	if logErr != nil {
+		return json.CommonFailure("日志存储失败", logErr)
+	} else {
+		logger.Infof("日志存储成功: %d", logId)
+	}
+
+	logger.Infof("user: %s stop task: %d ", ctx.Data["username"], id)
 
 	return json.Success("已执行停止操作, 请等待任务退出", nil)
 }

@@ -6,7 +6,7 @@
           <el-form-item label="节点ID">
             <el-input v-model.trim="searchParams.id"></el-input>
           </el-form-item>
-          <el-form-item label="主机名">
+          <el-form-item label="节点IP">
             <el-input v-model.trim="searchParams.name"></el-input>
           </el-form-item>
           <el-form-item>
@@ -47,7 +47,7 @@
         </el-table-column>
         <el-table-column
           prop="name"
-          label="主机名">
+          label="节点IP">
         </el-table-column>
         <el-table-column
           prop="port"
@@ -62,12 +62,12 @@
           prop="remark"
           label="备注">
         </el-table-column>
-        <el-table-column label="操作" width="300" v-if="this.isAdmin">
+        <el-table-column label="操作" width="300" v-if="this.$store.getters.user.isAdmin">
           <template slot-scope="scope">
             <el-row>
               <el-button type="primary" @click="toEdit(scope.row)">编辑</el-button>
               <el-button type="info" @click="ping(scope.row)">测试连接</el-button>
-              <el-button type="danger" @click="remove(scope.row)">删除</el-button>
+              <el-button type="danger"  @click="remove(scope.row)">删除</el-button>
             </el-row>
             <br>
           </template>
@@ -91,8 +91,7 @@ export default {
         id: '',
         name: '',
         alias: ''
-      },
-      isAdmin: this.$store.getters.user.isAdmin
+      }
     }
   },
   created () {

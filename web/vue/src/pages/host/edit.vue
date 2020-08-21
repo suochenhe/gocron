@@ -8,7 +8,7 @@
         <el-form-item label="节点名称" prop="alias">
           <el-input v-model="form.alias"></el-input>
         </el-form-item>
-        <el-form-item label="主机名" prop="name">
+        <el-form-item label="节点IP" prop="name">
           <el-input v-model="form.name"></el-input>
         </el-form-item>
         <el-form-item label="端口" prop="port">
@@ -47,7 +47,7 @@ export default {
       },
       formRules: {
         name: [
-          {required: true, message: '请输入主机名', trigger: 'blur'}
+          {required: true, message: '请输入节点IP', trigger: 'blur'}
         ],
         port: [
           {required: true, message: '请输入端口', trigger: 'blur'},

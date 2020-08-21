@@ -1,6 +1,18 @@
 import httpClient from '../utils/httpClient'
 
 export default {
+  ding (callback) {
+    httpClient.get('/system/ding', {}, callback)
+  },
+  updateDing (data, callback) {
+    httpClient.post('/system/ding/update', data, callback)
+  },
+  createDingUser (name, mobile, callback) {
+    httpClient.post('/system/ding/user', {name, mobile}, callback)
+  },
+  removeDingUser (userId, callback) {
+    httpClient.post(`/system/ding/user/remove/${userId}`, {}, callback)
+  },
   slack (callback) {
     httpClient.get('/system/slack', {}, callback)
   },

@@ -111,7 +111,7 @@
         </el-table-column>
         <el-table-column
           label="执行结果"
-          width="120" v-if="this.isAdmin">
+          width="120" v-if="this.$store.getters.user.isDeveloper">
           <template slot-scope="scope">
             <el-button type="success"
                        v-if="scope.row.status === 2"
@@ -167,7 +167,6 @@ export default {
         protocol: '',
         status: ''
       },
-      isAdmin: this.$store.getters.user.isAdmin,
       dialogVisible: false,
       currentTaskResult: {
         command: '',

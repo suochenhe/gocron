@@ -1,10 +1,7 @@
 # gocron - 定时任务管理系统
-[![Downloads](https://img.shields.io/github/downloads/ouqiang/gocron/total.svg)](https://github.com/ouqiang/gocron/releases)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/ouqiang/gocron/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/release/ouqiang/gocron.svg?label=Release)](https://github.com/ouqiang/gocron/releases)
 
 # 项目简介
-使用Go语言开发的轻量级定时任务集中调度和管理系统, 用于替代Linux-crontab [查看文档](https://github.com/ouqiang/gocron/wiki)
+使用Go语言开发的轻量级定时任务集中调度和管理系统, 用于替代Linux-crontab [查看文档](https://github.com/suochenhe/gocron/wiki)
 
 原有的延时任务拆分为独立项目[延迟队列](https://github.com/ouqiang/delay-queue)  
 
@@ -21,12 +18,12 @@
     * HTTP任务
     > 访问指定的URL地址, 由调度器直接执行, 不依赖任务节点
 * 查看任务执行结果日志
-* 任务执行结果通知, 支持邮件、Slack、Webhook
+* 任务执行结果通知, 支持邮件、Slack、Webhook、钉钉
 
 ### 截图
-![流程图](https://raw.githubusercontent.com/ouqiang/gocron/master/assets/screenshot/scheduler.png)
-![任务](https://raw.githubusercontent.com/ouqiang/gocron/master/assets/screenshot/task.png)
-![Slack](https://raw.githubusercontent.com/ouqiang/gocron/master/assets/screenshot/notification.png)
+![流程图](https://raw.githubusercontent.com/suochenhe/gocron/master/assets/screenshot/scheduler.png)
+![任务](https://raw.githubusercontent.com/suochenhe/gocron/master/assets/screenshot/task.png)
+![Slack](https://raw.githubusercontent.com/suochenhe/gocron/master/assets/screenshot/notification.png)
     
 ### 支持平台
 > Windows、Linux、Mac OS
@@ -36,9 +33,9 @@
 
 
 ## 下载
-[releases](https://github.com/ouqiang/gocron/releases)  
+[releases](https://github.com/suochenhe/gocron/releases)  
 
-[版本升级](https://github.com/ouqiang/gocron/wiki/版本升级)
+[版本升级](https://github.com/suochenhe/gocron/wiki/版本升级)
 
 ## 安装
 
@@ -57,7 +54,7 @@
 ### 源码安装
 
 - 安装Go 1.11+
-- `go get -d github.com/ouqiang/gocron`
+- `go get -d github.com/suochenhe/gocron`
 - `export GO111MODULE=on` 
 - 编译 `make`
 - 启动
@@ -92,7 +89,7 @@ docker run --name gocron --link mysql:db -p 5920:5920 -d ouqg/gocron
 `make run` 编译并运行
 
 `make package` 打包 
-> 生成当前系统的压缩包 gocron-v1.5-darwin-amd64.tar.gz gocron-node-v1.5-darwin-amd64.tar.gz
+> 生成当前系统的压缩包 gocron-v1.6-darwin-amd64.tar.gz gocron-node-v1.6-darwin-amd64.tar.gz
 
 `make package-all` 生成Windows、Linux、Mac的压缩包
 
@@ -133,9 +130,14 @@ docker run --name gocron --link mysql:db -p 5920:5920 -d ouqg/gocron
 * RPC框架 [gRPC](https://github.com/grpc/grpc)
 
 ## 反馈
-提交[issue](https://github.com/ouqiang/gocron/issues/new)
+提交[issue](https://github.com/suochenhe/gocron/issues/new)
 
 ## ChangeLog
+
+v1.6
+--------
+* 支持钉钉消息通知并制定AT的用户
+* 角色重构为游客、开发者、管理员，游客只有查看权限，开发者只有节点查看和任务管理权限
 
 v1.5
 --------
