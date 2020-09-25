@@ -53,7 +53,7 @@ const router = new Router({
       name: 'task-list',
       component: TaskList,
       meta: {
-        authRoles: [0, 1, 2],
+        authRoles: [-1, 0, 1, 2],
         keepAlive: true
       }
     },
