@@ -81,6 +81,7 @@ func (p *GRPCPool) factory(addr string) (*Client, error) {
 	opts := []grpc.DialOption{
 		grpc.WithKeepaliveParams(keepAliveParams),
 		grpc.WithBackoffMaxDelay(backOffMaxDelay),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(10 * 1024 * 1024)),
 	}
 
 	if !app.Setting.EnableTLS {

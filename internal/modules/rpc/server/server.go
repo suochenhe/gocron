@@ -7,10 +7,10 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/suochenhe/gocron/internal/modules/rpc/auth"
 	pb "github.com/suochenhe/gocron/internal/modules/rpc/proto"
 	"github.com/suochenhe/gocron/internal/modules/utils"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -58,6 +58,8 @@ func Start(addr string, enableTLS bool, certificate auth.Certificate) {
 	opts := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepAliveParams),
 		grpc.KeepaliveEnforcementPolicy(keepAlivePolicy),
+		grpc.MaxRecvMsgSize(10 * 1024 * 1024),
+		grpc.MaxSendMsgSize(10 * 1024 * 1024),
 	}
 	if enableTLS {
 		tlsConfig, err := certificate.GetTLSConfigForServer()

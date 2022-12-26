@@ -13,7 +13,7 @@ const AUTH_ERROR_CODE = 401
 const APP_NOT_INSTALL_CODE = 801
 
 axios.defaults.baseURL = 'api'
-axios.defaults.timeout = 10000
+axios.defaults.timeout = 20000
 axios.defaults.responseType = 'json'
 axios.interceptors.request.use(config => {
   config.headers['Auth-Token'] = store.getters.user.token
