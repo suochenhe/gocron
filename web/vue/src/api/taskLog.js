@@ -5,6 +5,10 @@ export default {
     httpClient.get('/task/log', query, callback)
   },
 
+  detail (id, callback) {
+    httpClient.get('/task/log/' + id, {}, callback)
+  },
+
   clear (callback) {
     httpClient.post('/task/log/clear', {}, callback)
   },

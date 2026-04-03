@@ -39,7 +39,7 @@ const (
 // 任务
 type Task struct {
 	Id               int                  `json:"id" xorm:"int pk autoincr"`
-	Name             string               `json:"name" xorm:"varchar(32) notnull"`                            // 任务名称
+	Name             string               `json:"name" xorm:"varchar(128) notnull"`                           // 任务名称
 	Level            TaskLevel            `json:"level" xorm:"tinyint notnull index default 1"`               // 任务等级 1: 主任务 2: 依赖任务
 	DependencyTaskId string               `json:"dependency_task_id" xorm:"varchar(64) notnull default ''"`   // 依赖任务ID,多个ID逗号分隔
 	DependencyStatus TaskDependencyStatus `json:"dependency_status" xorm:"tinyint notnull default 1"`         // 依赖关系 1:强依赖 主任务执行成功, 依赖任务才会被执行 2:弱依赖

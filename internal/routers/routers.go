@@ -86,6 +86,7 @@ func Register(m *macaron.Macaron) {
 		m.Get("/:id", task.Detail)
 		m.Get("", task.Index)
 		m.Get("/log", tasklog.Index)
+		m.Get("/log/:id", tasklog.Detail)
 		m.Post("/log/clear", tasklog.Clear)
 		m.Post("/log/stop", tasklog.Stop)
 		m.Post("/remove/:id", task.Remove)
@@ -266,6 +267,14 @@ func urlAuth(ctx *macaron.Context) {
 	}
 	for _, path := range allowPaths {
 		if path == uri {
+			return
+		}
+	}
+	allowPrefixes := []string{
+		"/task/log/",
+	}
+	for _, prefix := range allowPrefixes {
+		if strings.HasPrefix(uri, prefix) {
 			return
 		}
 	}

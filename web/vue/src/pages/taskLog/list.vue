@@ -172,6 +172,7 @@ export default {
         command: '',
         result: ''
       },
+      logResultCache: {},
       protocolList: [
         {
           value: '1',
@@ -237,6 +238,7 @@ export default {
     clearLog () {
       this.$appConfirm(() => {
         taskLogService.clear(() => {
+          this.logResultCache = {}
           this.searchParams.page = 1
           this.search()
         })
@@ -250,7 +252,15 @@ export default {
     showTaskResult (item) {
       this.dialogVisible = true
       this.currentTaskResult.command = item.command
-      this.currentTaskResult.result = item.result
+      if (this.logResultCache[item.id] !== undefined) {
+        this.currentTaskResult.result = this.logResultCache[item.id]
+        return
+      }
+      this.currentTaskResult.result = '加载中...'
+      taskLogService.detail(item.id, (data) => {
+        this.logResultCache[item.id] = data.result
+        this.currentTaskResult.result = data.result
+      })
     },
     refresh () {
       this.search(() => {

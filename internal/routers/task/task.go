@@ -21,7 +21,7 @@ type TaskForm struct {
 	Level            models.TaskLevel `binding:"Required;In(1,2)"`
 	DependencyStatus models.TaskDependencyStatus
 	DependencyTaskId string
-	Name             string `binding:"Required;MaxSize(32)"`
+	Name             string `binding:"Required;MaxSize(128)"`
 	Spec             string
 	Protocol         models.TaskProtocol   `binding:"In(1,2)"`
 	Command          string                `binding:"Required;MaxSize(256)"`

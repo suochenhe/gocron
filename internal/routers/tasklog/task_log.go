@@ -31,6 +31,18 @@ func Index(ctx *macaron.Context) string {
 	})
 }
 
+func Detail(ctx *macaron.Context) string {
+	id := ctx.ParamsInt64(":id")
+	logModel := new(models.TaskLog)
+	detail, err := logModel.Detail(id)
+	jsonResp := utils.JsonResponse{}
+	if err != nil {
+		return jsonResp.CommonFailure("获取日志详情失败", err)
+	}
+
+	return jsonResp.Success(utils.SuccessContent, detail)
+}
+
 // 清空日志
 func Clear(ctx *macaron.Context) string {
 	taskLogModel := new(models.TaskLog)

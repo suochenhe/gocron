@@ -12,7 +12,7 @@ type TaskType int8
 type TaskLog struct {
 	Id         int64        `json:"id" xorm:"bigint pk autoincr"`
 	TaskId     int          `json:"task_id" xorm:"int notnull index default 0"`       // 任务id
-	Name       string       `json:"name" xorm:"varchar(32) notnull"`                  // 任务名称
+	Name       string       `json:"name" xorm:"varchar(128) notnull"`                 // 任务名称
 	Spec       string       `json:"spec" xorm:"varchar(64) notnull"`                  // crontab
 	Protocol   TaskProtocol `json:"protocol" xorm:"tinyint notnull index"`            // 协议 1:http 2:RPC
 	Command    string       `json:"command" xorm:"varchar(256) notnull"`              // URL地址或shell命令
@@ -46,7 +46,7 @@ func (taskLog *TaskLog) List(params CommonMap) ([]TaskLog, error) {
 	list := make([]TaskLog, 0)
 	session := Db.Desc("id")
 	taskLog.parseWhere(session, params)
-	err := session.Limit(taskLog.PageSize, taskLog.pageLimitOffset()).Find(&list)
+	err := session.Omit("result").Limit(taskLog.PageSize, taskLog.pageLimitOffset()).Find(&list)
 	if len(list) > 0 {
 		for i, item := range list {
 			endTime := item.EndTime
@@ -59,6 +59,12 @@ func (taskLog *TaskLog) List(params CommonMap) ([]TaskLog, error) {
 	}
 
 	return list, err
+}
+
+func (taskLog *TaskLog) Detail(id int64) (TaskLog, error) {
+	t := TaskLog{}
+	_, err := Db.Where("id = ?", id).Get(&t)
+	return t, err
 }
 
 // 清空表
