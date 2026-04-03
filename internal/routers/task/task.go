@@ -72,6 +72,17 @@ func Index(ctx *macaron.Context) string {
 	})
 }
 
+func AllTags(ctx *macaron.Context) string {
+	taskModel := new(models.Task)
+	tags, err := taskModel.AllTags()
+	jsonResp := utils.JsonResponse{}
+	if err != nil {
+		logger.Error(err)
+		return jsonResp.CommonFailure("获取标签列表失败", err)
+	}
+	return jsonResp.Success(utils.SuccessContent, tags)
+}
+
 // Detail 任务详情
 func Detail(ctx *macaron.Context) string {
 	id := ctx.ParamsInt(":id")

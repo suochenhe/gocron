@@ -11,7 +11,15 @@
           <el-input v-model.trim="searchParams.name"></el-input>
         </el-form-item>
         <el-form-item label="标签">
-          <el-input v-model.trim="searchParams.tag"></el-input>
+          <el-select v-model.trim="searchParams.tag" filterable allow-create clearable placeholder="全部">
+            <el-option label="全部" value=""></el-option>
+            <el-option
+              v-for="item in tagList"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-row>
       <el-row>
@@ -225,6 +233,7 @@ export default {
           label: '停止'
         }
       ],
+      tagList: [],
       list_scrollTop: 0
     }
   },
@@ -241,6 +250,7 @@ export default {
   activated () {
     console.log('activated')
     this.search()
+    this.fetchTags()
     this.$refs.main.$el.scrollTop = this.list_scrollTop
     window.addEventListener('scroll', this.funScroll, true)
   },
@@ -286,6 +296,11 @@ export default {
       // console.log(scrollTop)
       // console.log(res)
       this.list_scrollTop = scrollTop
+    },
+    fetchTags () {
+      taskService.allTags((tags) => {
+        this.tagList = tags || []
+      })
     },
     changeStatus (item) {
       if (item.status) {

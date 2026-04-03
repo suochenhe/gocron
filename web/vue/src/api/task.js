@@ -14,6 +14,10 @@ export default {
     ], callback)
   },
 
+  allTags (callback) {
+    httpClient.get('/task/all-tags', {}, callback)
+  },
+
   detail (id, callback) {
     httpClient.batchGet([
       {

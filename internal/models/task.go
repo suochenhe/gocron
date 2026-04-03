@@ -243,6 +243,12 @@ func (task *Task) Total(params CommonMap) (int64, error) {
 	return int64(len(list)), err
 }
 
+func (task *Task) AllTags() ([]string, error) {
+	tags := make([]string, 0)
+	err := Db.Table(task).Distinct("tag").Where("tag != ''").Cols("tag").Find(&tags)
+	return tags, err
+}
+
 // 解析where
 func (task *Task) parseWhere(session *xorm.Session, params CommonMap) {
 	if len(params) == 0 {

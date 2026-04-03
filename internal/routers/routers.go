@@ -83,6 +83,7 @@ func Register(m *macaron.Macaron) {
 	// 定时任务
 	m.Group("/task", func() {
 		m.Post("/store", binding.Bind(task.TaskForm{}), task.Store)
+		m.Get("/all-tags", task.AllTags)
 		m.Get("/:id", task.Detail)
 		m.Get("", task.Index)
 		m.Get("/log", tasklog.Index)
@@ -260,6 +261,7 @@ func urlAuth(ctx *macaron.Context) {
 		"/install/status",
 		"/task",
 		"/task/log",
+		"/task/all-tags",
 		"/host",
 		"/host/all",
 		"/user/login",
