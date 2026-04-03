@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	AppVersion           = "1.6.1"
+	AppVersion           = "1.7"
 	BuildDate, GitCommit string
 )
 
