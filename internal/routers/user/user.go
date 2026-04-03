@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/suochenhe/gocron/internal/models"
 	"github.com/suochenhe/gocron/internal/modules/app"
 	"github.com/suochenhe/gocron/internal/modules/logger"
@@ -314,15 +314,15 @@ func IsDeveloper(ctx *macaron.Context) bool {
 
 // 生成jwt
 func generateToken(user *models.User) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := make(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(tokenDuration).Unix()
-	claims["uid"] = user.Id
-	claims["iat"] = time.Now().Unix()
-	claims["issuer"] = "gocron"
-	claims["username"] = user.Name
-	claims["role"] = user.Role
-	token.Claims = claims
+	claims := jwt.MapClaims{
+		"exp":      time.Now().Add(tokenDuration).Unix(),
+		"uid":      user.Id,
+		"iat":      time.Now().Unix(),
+		"issuer":   "gocron",
+		"username": user.Name,
+		"role":     user.Role,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(app.Setting.AuthSecret))
 }

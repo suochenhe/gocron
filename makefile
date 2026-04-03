@@ -1,4 +1,5 @@
 GO111MODULE=on
+export PATH := $(PATH):$(shell go env GOPATH)/bin
 
 .PHONY: build
 build: gocron node
@@ -60,10 +61,11 @@ run-vue:
 
 .PHONY: statik
 statik:
-	go get github.com/rakyll/statik
+	go install github.com/rakyll/statik@latest
 	go generate ./...
 
 .PHONY: lint
+lint:
 	golangci-lint run
 
 .PHONY: clean

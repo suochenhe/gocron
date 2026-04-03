@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -11,7 +12,6 @@ import (
 	"github.com/suochenhe/gocron/internal/modules/rpc/auth"
 	pb "github.com/suochenhe/gocron/internal/modules/rpc/proto"
 	"github.com/suochenhe/gocron/internal/modules/utils"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"

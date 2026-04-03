@@ -1,18 +1,17 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
-	"google.golang.org/grpc/status"
-
 	"github.com/suochenhe/gocron/internal/modules/logger"
 	"github.com/suochenhe/gocron/internal/modules/rpc/grpcpool"
 	pb "github.com/suochenhe/gocron/internal/modules/rpc/proto"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (

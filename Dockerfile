@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine as builder
+FROM golang:1.21-alpine as builder
 
 WORKDIR /go/src/github.com/suochenhe/gocron
 
@@ -12,7 +12,7 @@ RUN make install-vue \
     && make statik \
     && CGO_ENABLED=0 make gocron
 
-FROM alpine:3.7
+FROM alpine:3.18
 
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S app \
@@ -22,7 +22,7 @@ RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 WORKDIR /app
 
-COPY --from=builder /go/src/github.com/ouqiang/gocron/bin/gocron .
+COPY --from=builder /go/src/github.com/suochenhe/gocron/bin/gocron .
 
 RUN chown -R app:app ./
 

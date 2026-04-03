@@ -33,7 +33,7 @@ DEFAULT_ARCH=${GOHOSTARCH}
 # 支持的系统
 SUPPORT_OS=(linux darwin windows)
 # 支持的架构
-SUPPORT_ARCH=(386 amd64)
+SUPPORT_ARCH=(386 amd64 arm64)
  
 # 编译参数
 LDFLAGS=''
@@ -48,9 +48,12 @@ BUILD_DIR=''
 git_latest_tag() {
     local COMMIT_ID=""
     local TAG_NAME=""
-    COMMIT_ID=`git rev-list --tags --max-count=1`
-    TAG_NAME=`git describe --tags "${COMMIT_ID}"`
- 
+    COMMIT_ID=$(git rev-list --tags --max-count=1 2>/dev/null || true)
+    if [[ -z "${COMMIT_ID}" ]]; then
+        echo "dev"
+        return
+    fi
+    TAG_NAME=$(git describe --tags "${COMMIT_ID}")
     echo ${TAG_NAME}
 }
  
