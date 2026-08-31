@@ -8,7 +8,16 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-const DefaultSection = "default"
+const (
+	DefaultSection = "default"
+	// DefaultMaxMsgSizeMB gRPC 收发消息默认上限（MB），对齐 MySQL mediumtext
+	DefaultMaxMsgSizeMB = 16
+)
+
+// MaxMsgSizeBytes 返回 gRPC 消息大小上限（字节）
+func MaxMsgSizeBytes() int {
+	return DefaultMaxMsgSizeMB * 1024 * 1024
+}
 
 type Setting struct {
 	Db struct {

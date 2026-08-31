@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/suochenhe/gocron/internal/modules/rpc/auth"
 	pb "github.com/suochenhe/gocron/internal/modules/rpc/proto"
+	"github.com/suochenhe/gocron/internal/modules/setting"
 	"github.com/suochenhe/gocron/internal/modules/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -55,11 +56,12 @@ func Start(addr string, enableTLS bool, certificate auth.Certificate) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	msgSize := setting.MaxMsgSizeBytes()
 	opts := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepAliveParams),
 		grpc.KeepaliveEnforcementPolicy(keepAlivePolicy),
-		grpc.MaxRecvMsgSize(10 * 1024 * 1024),
-		grpc.MaxSendMsgSize(10 * 1024 * 1024),
+		grpc.MaxRecvMsgSize(msgSize),
+		grpc.MaxSendMsgSize(msgSize),
 	}
 	if enableTLS {
 		tlsConfig, err := certificate.GetTLSConfigForServer()

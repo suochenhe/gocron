@@ -9,6 +9,7 @@ import (
 	"github.com/suochenhe/gocron/internal/modules/app"
 	"github.com/suochenhe/gocron/internal/modules/rpc/auth"
 	"github.com/suochenhe/gocron/internal/modules/rpc/proto"
+	"github.com/suochenhe/gocron/internal/modules/setting"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -78,10 +79,14 @@ func (p *GRPCPool) factory(addr string) (*Client, error) {
 	if ok {
 		return client, nil
 	}
+	msgSize := setting.MaxMsgSizeBytes()
 	opts := []grpc.DialOption{
 		grpc.WithKeepaliveParams(keepAliveParams),
 		grpc.WithBackoffMaxDelay(backOffMaxDelay),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(10 * 1024 * 1024)),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(msgSize),
+			grpc.MaxCallSendMsgSize(msgSize),
+		),
 	}
 
 	if !app.Setting.EnableTLS {
