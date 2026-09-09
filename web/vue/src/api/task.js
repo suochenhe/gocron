@@ -18,6 +18,10 @@ export default {
     httpClient.get('/task/all-tags', {}, callback)
   },
 
+  notifyReceivers (callback) {
+    httpClient.get('/task/notify-receivers', {}, callback)
+  },
+
   detail (id, callback) {
     httpClient.batchGet([
       {

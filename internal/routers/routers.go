@@ -11,6 +11,7 @@ import (
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/gzip"
 	"github.com/go-macaron/toolbox"
+	"github.com/rakyll/statik/fs"
 	"github.com/suochenhe/gocron/internal/modules/app"
 	"github.com/suochenhe/gocron/internal/modules/logger"
 	"github.com/suochenhe/gocron/internal/modules/utils"
@@ -21,7 +22,6 @@ import (
 	"github.com/suochenhe/gocron/internal/routers/task"
 	"github.com/suochenhe/gocron/internal/routers/tasklog"
 	"github.com/suochenhe/gocron/internal/routers/user"
-	"github.com/rakyll/statik/fs"
 	"gopkg.in/macaron.v1"
 
 	_ "github.com/suochenhe/gocron/internal/statik"
@@ -84,6 +84,7 @@ func Register(m *macaron.Macaron) {
 	m.Group("/task", func() {
 		m.Post("/store", binding.Bind(task.TaskForm{}), task.Store)
 		m.Get("/all-tags", task.AllTags)
+		m.Get("/notify-receivers", task.NotifyReceivers)
 		m.Get("/:id", task.Detail)
 		m.Get("", task.Index)
 		m.Get("/log", tasklog.Index)
@@ -262,6 +263,7 @@ func urlAuth(ctx *macaron.Context) {
 		"/task",
 		"/task/log",
 		"/task/all-tags",
+		"/task/notify-receivers",
 		"/host",
 		"/host/all",
 		"/user/login",

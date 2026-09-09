@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -62,6 +64,7 @@ type Task struct {
 	Deleted          time.Time            `json:"deleted" xorm:"datetime deleted"`               // 删除时间
 	BaseModel        `json:"-" xorm:"-"`
 	Hosts            []TaskHostDetail `json:"hosts" xorm:"-"`
+	NotifyReceivers  []string         `json:"notify_receivers" xorm:"-"`
 	NextRunTime      time.Time        `json:"next_run_time" xorm:"-"`
 }
 
@@ -205,7 +208,109 @@ func (task *Task) List(params CommonMap) ([]Task, error) {
 		return nil, err
 	}
 
-	return task.setHostsForTasks(list)
+	return task.setTaskRelations(list)
+}
+
+func (task *Task) setTaskRelations(tasks []Task) ([]Task, error) {
+	if tasks, err := task.setHostsForTasks(tasks); err != nil {
+		return nil, err
+	} else {
+		return task.setNotifyReceivers(tasks)
+	}
+}
+
+type NotifyReceiverOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+func (task *Task) NotifyReceiverOptions() ([]NotifyReceiverOption, error) {
+	settings := make([]Setting, 0)
+	if err := Db.Find(&settings); err != nil {
+		return nil, err
+	}
+	options := []NotifyReceiverOption{
+		{Value: "不通知", Label: "不通知"},
+		{Value: "WebHook", Label: "WebHook"},
+		{Value: "所有人", Label: "所有人"},
+		{Value: "无", Label: "无"},
+	}
+	seen := map[string]bool{"不通知": true, "WebHook": true, "所有人": true, "无": true}
+	for _, setting := range settings {
+		label := notifyReceiverName(setting)
+		if label != "" && !seen[label] {
+			options = append(options, NotifyReceiverOption{Value: label, Label: label})
+			seen[label] = true
+		}
+	}
+	return options, nil
+}
+
+func notifyReceiverName(setting Setting) string {
+	switch {
+	case setting.Code == DingCode && setting.Key == DingUserKey:
+		return getDingUserName(setting.Value)
+	case setting.Code == MailCode && setting.Key == MailUserKey:
+		var user MailUser
+		if json.Unmarshal([]byte(setting.Value), &user) == nil {
+			return user.Username
+		}
+	case setting.Code == SlackCode && setting.Key == SlackChannelKey:
+		return setting.Value
+	}
+	return ""
+}
+
+func (task *Task) setNotifyReceivers(tasks []Task) ([]Task, error) {
+	settings := make([]Setting, 0)
+	if err := Db.Find(&settings); err != nil {
+		return nil, err
+	}
+	for i := range tasks {
+		tasks[i].NotifyReceivers = formatNotifyReceivers(tasks[i], settings)
+	}
+	return tasks, nil
+}
+
+func formatNotifyReceivers(task Task, settings []Setting) []string {
+	if task.NotifyStatus == 0 {
+		return []string{"不通知"}
+	}
+	if task.NotifyType == 3 {
+		return []string{"WebHook"}
+	}
+	names := make([]string, 0)
+	for _, id := range strings.Split(task.NotifyReceiverId, ",") {
+		if id == "" {
+			continue
+		}
+		if task.NotifyType == 4 {
+			if id == DingNotifyNone {
+				names = append(names, "无")
+				continue
+			}
+			if id == DingNotifyAll {
+				names = append(names, "所有人")
+				continue
+			}
+		}
+		for _, setting := range settings {
+			if strconv.Itoa(setting.Id) != id {
+				continue
+			}
+			if task.NotifyType == 4 && setting.Code == DingCode && setting.Key == DingUserKey {
+				names = append(names, getDingUserName(setting.Value))
+			} else if task.NotifyType == 1 && setting.Code == MailCode && setting.Key == MailUserKey {
+				var user MailUser
+				if json.Unmarshal([]byte(setting.Value), &user) == nil {
+					names = append(names, user.Username)
+				}
+			} else if task.NotifyType == 2 && setting.Code == SlackCode && setting.Key == SlackChannelKey {
+				names = append(names, setting.Value)
+			}
+		}
+	}
+	return names
 }
 
 // 获取依赖任务列表
@@ -266,6 +371,10 @@ func (task *Task) parseWhere(session *xorm.Session, params CommonMap) {
 	if ok && name.(string) != "" {
 		session.And("t.name LIKE ?", "%"+name.(string)+"%")
 	}
+	command, ok := params["Command"]
+	if ok && command.(string) != "" {
+		session.And("t.command LIKE ?", "%"+command.(string)+"%")
+	}
 	protocol, ok := params["Protocol"]
 	if ok && protocol.(int) > 0 {
 		session.And("protocol = ?", protocol)
@@ -279,4 +388,45 @@ func (task *Task) parseWhere(session *xorm.Session, params CommonMap) {
 	if ok && tag.(string) != "" {
 		session.And("tag = ? ", tag)
 	}
+	notifyUser, ok := params["NotifyUser"]
+	if ok && notifyUser.(string) != "" {
+		task.applyNotifyUserFilter(session, notifyUser.(string))
+	}
+}
+
+func (task *Task) applyNotifyUserFilter(session *xorm.Session, keyword string) {
+	if keyword == "不通知" {
+		session.And("t.notify_status = ?", 0)
+		return
+	}
+	if keyword == "WebHook" {
+		session.And("t.notify_type = ?", 3)
+		return
+	}
+	settings := make([]Setting, 0)
+	if err := Db.Find(&settings); err != nil {
+		return
+	}
+	ids := make([]interface{}, 0)
+	for _, setting := range settings {
+		if notifyReceiverName(setting) == keyword || strings.Contains(strings.ToLower(notifyReceiverName(setting)), strings.ToLower(keyword)) {
+			ids = append(ids, setting.Id)
+		}
+	}
+	if keyword == "所有人" || keyword == "无" {
+		session.And("t.notify_receiver_id LIKE ?", "%"+map[string]string{"所有人": DingNotifyAll, "无": DingNotifyNone}[keyword]+"%")
+		return
+	}
+	if len(ids) == 0 {
+		session.And("1 = 0")
+		return
+	}
+	conditions := make([]string, 0, len(ids))
+	args := make([]interface{}, 0, len(ids)*4)
+	for _, id := range ids {
+		idValue := strconv.Itoa(id.(int))
+		conditions = append(conditions, "t.notify_receiver_id = ? OR t.notify_receiver_id LIKE ? OR t.notify_receiver_id LIKE ? OR t.notify_receiver_id LIKE ?")
+		args = append(args, idValue, idValue+",%", "%,"+idValue+",%", "%,"+idValue)
+	}
+	session.And("("+strings.Join(conditions, " OR ")+")", args...)
 }

@@ -1,10 +1,10 @@
 package task
 
 import (
-	"strconv"
-	"strings"
 	gjson "encoding/json"
 	"github.com/ouqiang/goutil"
+	"strconv"
+	"strings"
 
 	"github.com/go-macaron/binding"
 	"github.com/jakecoffman/cron"
@@ -70,6 +70,17 @@ func Index(ctx *macaron.Context) string {
 		"total": total,
 		"data":  tasks,
 	})
+}
+
+func NotifyReceivers(ctx *macaron.Context) string {
+	taskModel := new(models.Task)
+	receivers, err := taskModel.NotifyReceiverOptions()
+	jsonResp := utils.JsonResponse{}
+	if err != nil {
+		logger.Error(err)
+		return jsonResp.CommonFailure("获取通知用户失败", err)
+	}
+	return jsonResp.Success(utils.SuccessContent, receivers)
 }
 
 func AllTags(ctx *macaron.Context) string {
@@ -230,7 +241,7 @@ func Store(ctx *macaron.Context, form TaskForm) string {
 	} else {
 		logger.Infof("日志存储成功: %d", logId)
 	}
-	
+
 	logger.Infof("user: %s store task: %d, form: %s", ctx.Data["username"], id, string(out))
 
 	return json.Success("保存成功", nil)
@@ -387,6 +398,8 @@ func parseQueryParams(ctx *macaron.Context) models.CommonMap {
 	params["Id"] = ctx.QueryInt("id")
 	params["HostId"] = ctx.QueryInt("host_id")
 	params["Name"] = ctx.QueryTrim("name")
+	params["Command"] = ctx.QueryTrim("command")
+	params["NotifyUser"] = ctx.QueryTrim("notify_user")
 	params["Protocol"] = ctx.QueryInt("protocol")
 	params["Tag"] = ctx.QueryTrim("tag")
 	status := ctx.QueryInt("status")

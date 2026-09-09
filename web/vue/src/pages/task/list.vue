@@ -10,6 +10,20 @@
         <el-form-item label="任务名称">
           <el-input v-model.trim="searchParams.name"></el-input>
         </el-form-item>
+        <el-form-item label="命令">
+          <el-input v-model.trim="searchParams.command"></el-input>
+        </el-form-item>
+        <el-form-item label="通知用户">
+          <el-select v-model.trim="searchParams.notify_user" filterable allow-create clearable placeholder="全部">
+            <el-option label="全部" value=""></el-option>
+            <el-option
+              v-for="item in notifyReceivers"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="标签">
           <el-select v-model.trim="searchParams.tag" filterable allow-create clearable placeholder="全部">
             <el-option label="全部" value=""></el-option>
@@ -110,6 +124,11 @@
                 {{item.alias}}<br>
               </div>
             </el-form-item> <br>
+            <el-form-item label="通知用户">
+              <div v-for="item in scope.row.notify_receivers" :key="item">
+                {{item}}<br>
+              </div>
+            </el-form-item> <br>
             <el-form-item label="命令:" style="width: 100%">
               {{scope.row.command}}
             </el-form-item> <br>
@@ -131,6 +150,20 @@
       <el-table-column
         prop="tag"
         label="标签">
+      </el-table-column>
+      <el-table-column
+        label="任务节点"
+        width="160">
+        <template slot-scope="scope">
+          {{scope.row.hosts.map(item => item.alias).join(', ')}}
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="通知用户"
+        width="160">
+        <template slot-scope="scope">
+          {{scope.row.notify_receivers.join(', ')}}
+        </template>
       </el-table-column>
       <el-table-column
         prop="spec"
@@ -209,6 +242,8 @@ export default {
         id: '',
         protocol: '',
         name: '',
+        command: '',
+        notify_user: '',
         tag: '',
         host_id: '',
         status: ''
@@ -234,6 +269,7 @@ export default {
         }
       ],
       tagList: [],
+      notifyReceivers: [],
       list_scrollTop: 0
     }
   },
@@ -251,6 +287,7 @@ export default {
     console.log('activated')
     this.search()
     this.fetchTags()
+    this.fetchNotifyReceivers()
     this.$refs.main.$el.scrollTop = this.list_scrollTop
     window.addEventListener('scroll', this.funScroll, true)
   },
@@ -300,6 +337,11 @@ export default {
     fetchTags () {
       taskService.allTags((tags) => {
         this.tagList = tags || []
+      })
+    },
+    fetchNotifyReceivers () {
+      taskService.notifyReceivers((receivers) => {
+        this.notifyReceivers = receivers || []
       })
     },
     changeStatus (item) {
