@@ -9,6 +9,7 @@ import (
 	"github.com/go-macaron/binding"
 	"github.com/jakecoffman/cron"
 	"github.com/suochenhe/gocron/internal/models"
+	"github.com/suochenhe/gocron/internal/modules/app"
 	"github.com/suochenhe/gocron/internal/modules/logger"
 	"github.com/suochenhe/gocron/internal/modules/utils"
 	"github.com/suochenhe/gocron/internal/routers/base"
@@ -301,8 +302,11 @@ func Disable(ctx *macaron.Context) string {
 
 // 手动运行任务
 func Run(ctx *macaron.Context) string {
-	id := ctx.ParamsInt(":id")
 	json := utils.JsonResponse{}
+	if !app.Setting.SchedulerEnabled {
+		return json.CommonFailure("安全模式已启用，禁止执行任务")
+	}
+	id := ctx.ParamsInt(":id")
 	taskModel := new(models.Task)
 	task, err := taskModel.Detail(id)
 	if err != nil || task.Id <= 0 {
@@ -335,8 +339,11 @@ func Run(ctx *macaron.Context) string {
 
 // 改变任务状态
 func changeStatus(ctx *macaron.Context, status models.Status) string {
-	id := ctx.ParamsInt(":id")
 	json := utils.JsonResponse{}
+	if status == models.Enabled && !app.Setting.SchedulerEnabled {
+		return json.CommonFailure("安全模式已启用，禁止启用任务")
+	}
+	id := ctx.ParamsInt(":id")
 	taskModel := new(models.Task)
 	task, dErr := taskModel.Detail(id)
 	if dErr != nil || task.Id <= 0 {

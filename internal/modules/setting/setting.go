@@ -44,6 +44,7 @@ type Setting struct {
 	KeyFile   string
 
 	ConcurrencyQueue int
+	SchedulerEnabled bool
 	AuthSecret       string
 }
 
@@ -74,6 +75,7 @@ func Read(filename string) (*Setting, error) {
 	s.ApiSecret = section.Key("api.secret").MustString("")
 	s.ApiSignEnable = section.Key("api.sign.enable").MustBool(true)
 	s.ConcurrencyQueue = section.Key("concurrency.queue").MustInt(500)
+	s.SchedulerEnabled = section.Key("scheduler.enabled").MustBool(true)
 	s.AuthSecret = section.Key("auth_secret").MustString("")
 	if s.AuthSecret == "" {
 		s.AuthSecret = utils.RandAuthToken()

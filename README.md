@@ -29,7 +29,7 @@
 > Windows、Linux、Mac OS
 
 ### 环境要求
->  MySQL
+>  MySQL、PostgreSQL
 
 
 ## 下载
@@ -53,14 +53,25 @@
 
 ### 源码安装
 
-- 安装Go 1.11+
-- `go get -d github.com/suochenhe/gocron`
-- `export GO111MODULE=on` 
+- 安装Go 1.21+
+- `git clone https://github.com/suochenhe/gocron.git && cd gocron`
 - 编译 `make`
 - 启动
     * gocron `./bin/gocron web`
     * gocron-node `./bin/gocron-node`
 
+
+### 前端安全测试模式
+
+如果只想使用数据库中的任务、节点和通知用户数据测试前端，而不执行任何任务，可在 `conf/app.ini` 的 `[default]` 节中增加：
+
+```ini
+scheduler.enabled = false
+```
+
+安全模式下不会初始化定时任务调度器，也会禁止手动执行和启用任务，但仍然可以读取和展示数据库数据。任务的下次执行时间为空。
+
+该配置默认为 `true`。恢复正常调度时删除配置项或改为 `scheduler.enabled = true`，然后重启服务。
 
 ### docker
 
@@ -89,9 +100,9 @@ docker run --name gocron --link mysql:db -p 5920:5920 -d ouqg/gocron
 `make run` 编译并运行
 
 `make package` 打包 
-> 生成当前系统的压缩包 gocron-v1.6-darwin-amd64.tar.gz gocron-node-v1.6-darwin-amd64.tar.gz
+> 生成当前系统和架构的压缩包
 
-`make package-all` 生成Windows、Linux、Mac的压缩包
+`make package-all` 生成Linux、Mac、Windows的 386、amd64、arm64 压缩包
 
 ### 命令
 
@@ -126,7 +137,7 @@ docker run --name gocron --link mysql:db -p 5920:5920 -d ouqg/gocron
 * 定时任务调度 [Cron](https://github.com/robfig/cron)
 * ORM [Xorm](https://github.com/go-xorm/xorm)
 * UI框架 [Element UI](https://github.com/ElemeFE/element)
-* 依赖管理 [Govendor](https://github.com/kardianos/govendor)
+* 依赖管理 [Go Modules](https://go.dev/wiki/Modules)
 * RPC框架 [gRPC](https://github.com/grpc/grpc)
 
 ## 反馈

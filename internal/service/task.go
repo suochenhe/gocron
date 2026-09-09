@@ -106,6 +106,10 @@ type TaskResult struct {
 
 // 初始化任务, 从数据库取出所有任务, 添加到定时任务并运行
 func (task Task) Initialize() {
+	if !app.Setting.SchedulerEnabled {
+		logger.Warn("调度器已禁用，跳过定时任务初始化")
+		return
+	}
 	serviceCron = cron.New()
 	serviceCron.Start()
 	concurrencyQueue = ConcurrencyQueue{queue: make(chan struct{}, app.Setting.ConcurrencyQueue)}
@@ -150,6 +154,9 @@ func (task Task) RemoveAndAdd(taskModel models.Task) {
 
 // 添加任务
 func (task Task) Add(taskModel models.Task) {
+	if !app.Setting.SchedulerEnabled {
+		return
+	}
 	if taskModel.Level == models.TaskLevelChild {
 		logger.Errorf("添加任务失败#不允许添加子任务到调度器#任务Id-%d", taskModel.Id)
 		return
@@ -171,6 +178,9 @@ func (task Task) Add(taskModel models.Task) {
 }
 
 func (task Task) NextRunTime(taskModel models.Task) time.Time {
+	if !app.Setting.SchedulerEnabled {
+		return time.Time{}
+	}
 	if taskModel.Level != models.TaskLevelParent ||
 		taskModel.Status != models.Enabled {
 		return time.Time{}
@@ -192,17 +202,26 @@ func (task Task) Stop(ip string, port int, id int64) {
 }
 
 func (task Task) Remove(id int) {
+	if serviceCron == nil {
+		return
+	}
 	serviceCron.RemoveJob(strconv.Itoa(id))
 }
 
 // 等待所有任务结束后退出
 func (task Task) WaitAndExit() {
+	if serviceCron == nil {
+		return
+	}
 	serviceCron.Stop()
 	taskCount.Exit()
 }
 
 // 直接运行任务
 func (task Task) Run(taskModel models.Task) {
+	if !app.Setting.SchedulerEnabled {
+		return
+	}
 	go createJob(taskModel)()
 }
 

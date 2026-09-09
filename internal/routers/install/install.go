@@ -116,6 +116,7 @@ func writeConfig(form InstallForm) error {
 		"api.secret", "",
 		"enable_tls", "false",
 		"concurrency.queue", "500",
+		"scheduler.enabled", "true",
 		"auth_secret", utils.RandAuthToken(),
 		"ca_file", "",
 		"cert_file", "",
